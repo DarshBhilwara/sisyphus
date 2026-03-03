@@ -22,3 +22,5 @@ All the services currently run inside a security hardened single-node k3s cluste
 ### 1. Ubuntu Server
 - Refer [os-setup](./os-setup/README.md) for setting up the operating system.
 
+### 2. Set up SSH server with firewall hardening
+- Do this by yourself by finding the best ways to authenticate through SSH and connect it to the internet with atmost security. (this is of the most importance but cannot share it because of obvious reasons)
