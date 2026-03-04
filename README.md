@@ -75,9 +75,11 @@ cd homelab
 mkdir core storage monitoring security apps
 cd /data 
 sudo mkdir docker nas backups logs configs
+sudo chown -R $USER:$USER /data
 ```
 
-
+### 6. Homelab services
+To set up homelab services, refer [homelab-services](./homelab-services/README.md)
 
 
 # Comments while making the project
