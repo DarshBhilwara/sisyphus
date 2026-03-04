@@ -25,7 +25,51 @@ All the services currently run inside a security hardened single-node k3s cluste
 ### 2. Set up SSH server with firewall hardening
 - Do this by yourself by finding the best ways to authenticate through SSH and connect it to the internet with atmost security. (this is of the most importance but cannot share it because of obvious reasons)
 
+### 3. Disable sleep
+```
+sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+```
+
+### 4. Docker Installation and Setup
+
+```
+sudo apt install docker.io docker-compose
+```
+
+Add your user to the docker group:
+
+```
+sudo usermod -aG docker $USER
+```
+
+Move the docker storage to HDD (by default, it stores in `/var/lib/docker`)
+
+```
+sudo mkdir -p /etc/docker
+sudo nano /etc/docker/daemon.json
+```
+Add
+```
+{
+  "data-root": "/data/docker"
+}
+```
+Restart docker
+```
+sudo systemctl restart docker
+```
+Reboot and verify
+
+```
+docker info | grep "Docker Root Dir"
+```
+should give
+```
+Docker Root Dir: /data/docker
+```
+
+
 
 
 # Comments while making the project
-- 4th March 226 - This project was supposed to be set up with kubernetes but after I learned the whole thing and installed k3s, the RAM usage went up to 2GB and my current infrastructure cannot support the whole working with kubernetes added to it. So yeah, sadly after wasting two days on it, I have to pivot away from it. 
+- 4th March 2026 - This project was supposed to be set up with kubernetes but after I learned the whole thing and installed k3s, the RAM usage went up to 2GB and my current infrastructure cannot support the whole working with kubernetes added to it. So yeah, sadly after wasting two days on it, I have to pivot away from it. 
