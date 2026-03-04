@@ -30,7 +30,7 @@ docker-compose up -d
 ```
 
 # 2. NAS
-We will use samba for SMB
+We will use `samba` for SMB
 ```
 sudo apt install samba
 ```
@@ -57,16 +57,52 @@ Set permissions
 ```
 sudo chown -R $USER:$USER /data/nas                                            
 chmod 775 /data/nas
-Restart SMB
 ```
 
+Restart SMB
 ```
 sudo systemctl restart smbd
 ```
 
-
+Connect to it with
+```
+smb://server-ip/nas
+```
 
 # 3. Phone Backup
+We will use `syncthing`
+
+```
+mkdir -p /data/configs/syncthing
+mkdir -p /data/nas/phone-backup
+sudo chown -R 1000:1000 /data/configs/syncthing
+sudo chmod -R 755 /data/configs/syncthing
+cd ~/homelab/apps
+mkdir syncthing
+cd syncthing
+vim docker-compose.yml
+```
+Insert this:
+```
+services:
+  syncthing:
+    image: syncthing/syncthing:latest
+    container_name: syncthing
+    ports:
+      - "8384:8384"
+      - "22000:22000/tcp"
+      - "22000:22000/udp"
+    volumes:
+      - /data/configs/syncthing:/var/syncthing/config
+      - /data/nas/phone-backup:/var/syncthing/phone
+    restart: unless-stopped
+```
+Run
+```
+docker-compose up -d 
+```
+Now set up and use `syncthing`
+
 # 4. Notes with sync
 # 5. Bookmarks with sync
 # 6. Streaming 
