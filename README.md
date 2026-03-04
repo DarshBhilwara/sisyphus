@@ -68,6 +68,15 @@ should give
 Docker Root Dir: /data/docker
 ```
 
+### 5. Setting up directories
+```
+mkdir homelab
+cd homelab
+mkdir core storage monitoring security apps
+cd /data 
+sudo mkdir docker nas backups logs configs
+```
+
 
 
 
