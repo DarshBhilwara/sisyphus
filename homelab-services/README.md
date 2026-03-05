@@ -103,7 +103,57 @@ docker-compose up -d
 ```
 Now set up and use `syncthing`
 
-# 4. Notes with sync
+# 4. Notes 
+We will use `joplin` for notes
+```
+sudo mkdir -p /data/configs/joplin/postgres
+sudo chown -R 999:999 /data/configs/joplin/postgres
+cd ~/homelab/apps
+mkdir joplin
+cd joplin
+vim docker-compose.yml
+```
+Insert this:
+```
+services:
+  db:
+    image: postgres:16
+    container_name: joplin-db
+    restart: unless-stopped
+    volumes:
+      - /data/configs/joplin/postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: joplin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: joplindb
+
+  app:
+    image: joplin/server:latest
+    container_name: joplin-server
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "22300:22300"
+    environment:
+      APP_PORT: 22300
+      APP_BASE_URL: http://server-ip:22300
+      DB_CLIENT: pg
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: joplin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DATABASE: joplindb
+```
+Run by 
+```
+docker-compose up -d
+```
+
+Visit `http://server-ip:22300` from client and set up joplin
+- Login - `admin@localhost`
+- Password - `admin`
+
 # 5. Bookmarks with sync
 # 6. Streaming 
 # 7. Cron Jobs
