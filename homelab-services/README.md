@@ -155,5 +155,33 @@ Visit `http://server-ip:22300` from client and set up joplin
 - Password - `admin`
 
 # 5. Bookmarks with sync
+We will use `linkding` for this
+```
+sudo mkdir -p /data/configs/linkding
+sudo chown -R $USER:$USER /data/configs/linkding
+mkdir -p ~/homelab/apps/linkding
+cd ~/homelab/apps/linkding
+vim docker-compose.yml
+```
+Insert this
+```
+services:
+  linkding:
+    image: sissbruecker/linkding:latest
+    container_name: linkding
+    ports:
+      - "9090:9090"
+    volumes:
+      - /data/configs/linkding:/etc/linkding/data
+    restart: unless-stopped
+```
+Then start
+```
+docker-compose up -d
+```
+Visit `http://server-ip:9090` on the client and set up your bookmarks
+- Login - `admin`
+- Password - `admin`
+
 # 6. Streaming 
 # 7. Cron Jobs
