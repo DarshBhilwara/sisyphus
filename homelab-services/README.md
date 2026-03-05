@@ -154,7 +154,7 @@ Visit `http://server-ip:22300` from client and set up joplin
 - Login - `admin@localhost`
 - Password - `admin`
 
-# 5. Bookmarks with sync
+# 5. Bookmarks 
 We will use `linkding` for this
 ```
 sudo mkdir -p /data/configs/linkding
@@ -184,4 +184,36 @@ Visit `http://server-ip:9090` on the client and set up your bookmarks
 - Password - `admin`
 
 # 6. Streaming 
-# 7. Cron Jobs
+We will use `jellyfin` for this
+```
+mkdir -p /data/nas/media/movies
+mkdir -p /data/nas/media/tv
+mkdir -p /data/nas/media/personal
+mkdir -p /data/configs/jellyfin
+mkdir -p /data/configs/jellyfin/cache
+cd ~/homelab/apps
+mkdir jellyfin
+cd jellyfin
+vim docker-compose.yml
+```
+Insert this:
+```
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    ports:
+      - "8096:8096"
+    volumes:
+      - /data/configs/jellyfin:/config
+      - /data/configs/jellyfin/cache:/cache
+      - /data/nas:/nas
+    devices:
+      - /dev/dri:/dev/dri
+    restart: unless-stopped
+```
+Then start
+```
+docker-compose up -d
+```
+Visit `http://server-ip:8096` on the client and set up your account
