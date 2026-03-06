@@ -183,6 +183,10 @@ Then start
 ```
 docker-compose up -d
 ```
+Create your account
+```
+docker exec -it linkding python manage.py createsuperuser --username=username --email=youremail
+```
 Visit `http://server-ip:9090` on the client and set up your bookmarks
 - Login - `admin`
 - Password - `admin`
