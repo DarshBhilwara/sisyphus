@@ -148,6 +148,14 @@ services:
       POSTGRES_USER: joplin
       POSTGRES_PASSWORD: password
       POSTGRES_DATABASE: joplindb
+      MAILER_ENABLED=1
+      MAILER_HOST=smtp.gmail.com
+      MAILER_PORT=587
+      MAILER_SECURITY=starttls
+      MAILER_AUTH_USER=my_email_address
+      MAILER_AUTH_PASSWORD=my_email_password
+      MAILER_NOREPLY_NAME=joplin-server
+      MAILER_NOREPLY_EMAIL=my_email_address
 ```
 Run by 
 ```
@@ -157,6 +165,8 @@ docker-compose up -d
 Visit `http://server-ip:22300` from client and set up joplin
 - Login - `admin@localhost`
 - Password - `admin`
+
+Reset the password and it will say check email. Go to `http://server-ip:22300/admin/emails` and get the confirmation link.
 
 # 5. Bookmarks 
 We will use `linkding` for this
