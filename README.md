@@ -81,11 +81,13 @@ sudo chown -R $USER:$USER /data
 ### 6. Homelab services
 To set up homelab services, refer [homelab-services](./homelab-services/README.md)
 
-### 7. Backups and misc
-Now that we have a fully functioning homelab, we will go on to set up backups and cron jobs.
+### 7. Blue Team Stack
+Now that we have a fully functional homelab with all applications running, we are gonna install all the blue team softwares required for cybersecurity. Refer [blue-team-stuff](./blue-team-stuff/README.md)
 
+### 8. Backups and misc
+Now that we have a fully functioning homelab with all the blue team softwares, we will go on to set up backups and cron jobs.
 
-### 8. Other Tweaks
+### 9. Other Tweaks
 #### Connection
 If the connection on SMB is slow,
 ```
