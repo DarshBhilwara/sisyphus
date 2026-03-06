@@ -221,3 +221,30 @@ Then start
 docker-compose up -d
 ```
 Visit `http://server-ip:8096` on the client and set up your account
+
+# 7. System Monitoring
+We will use `dashdot` for this.
+```
+cd ~/homelab/apps
+mkdir dashdot
+cd dashdot
+vim docker-compose.yaml
+```
+Insert this
+```
+services:
+  dashdot:
+    image: mauricenino/dashdot:latest
+    container_name: dashdot
+    ports:
+      - "3001:3001"
+    volumes:
+      - /:/mnt/host:ro
+    restart: unless-stopped
+```
+Start
+```
+docker compose up -d
+```
+
+Set dashdot up on `http://server-ip:3001` on the client and you may also add it in your dashboard.
