@@ -81,6 +81,26 @@ sudo chown -R $USER:$USER /data
 ### 6. Homelab services
 To set up homelab services, refer [homelab-services](./homelab-services/README.md)
 
+### 7. Backups and misc
+Now that we have a fully functioning homelab, we will go on to set up backups and cron jobs.
+
+
+### 8. Other Tweaks
+#### Connection
+If the connection on SMB is slow,
+```
+sudo iw dev wlan0 set power_save off
+```
+In the file `/etc/samba/smb.conf`, add:
+```
+[global]
+server min protocol = SMB2
+socket options = TCP_NODELAY IPTOS_LOWDELAY
+read raw = yes
+write raw = yes
+max xmit = 65535
+```
+
 
 # Comments while making the project
 - 4th March 2026 - This project was supposed to be set up with kubernetes but after I learned the whole thing and installed k3s, the RAM usage went up to 2GB and my current infrastructure cannot support the whole working with kubernetes added to it. So yeah, sadly after wasting two days on it, I have to pivot away from it. 

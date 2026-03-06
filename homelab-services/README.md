@@ -1,33 +1,37 @@
 # 1. Dashboard
-We will use `Homepage` for dashboards.
+We will use `homarr` for dashboards.
 
 ```
-mkdir -p /data/configs/homepage
+sudo mkdir -p /data/configs/homarr
+sudo chown -R $USER:$USER /data/configs/homarr
 cd ~/homelab/apps
-mkdir dashboard
-cd dashboard
+mkdir homarr
+cd homarr
 vim docker-compose.yaml
 ```
 
 Include config like
 ```
 services:
- homepage:
-  image: ghcr.io/gethomepage/homepage:latest
-  container_name: homepage
-  ports:
-   - 3000:3000
-  volumes:
-   - /data/configs/homepage:/app/config 
-   - /var/run/docker.sock:/var/run/docker.sock:ro 
-  environment:
-   HOMEPAGE_ALLOWED_HOSTS: "*"
-  restart: unless-stopped
+  homarr:
+    image: ghcr.io/ajnart/homarr:latest
+    container_name: homarr
+    ports:
+      - "7575:7575"
+    environment:
+      - PORT=7575
+    volumes:
+      - /data/configs/homarr:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    healthcheck:
+      disable: true
 ```
 Run
 ```
 docker-compose up -d 
 ```
+Visit `http://server-ip:7575` from client and set up your dashboard
 
 # 2. NAS
 We will use `samba` for SMB
@@ -101,7 +105,7 @@ Run
 ```
 docker-compose up -d 
 ```
-Now set up and use `syncthing`
+Visit `http://server-ip:8384` from client and set up your linkding
 
 # 4. Notes 
 We will use `joplin` for notes
