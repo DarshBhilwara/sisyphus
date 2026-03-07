@@ -445,5 +445,14 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 ```
-Restart prometheus and check logs.
+- Fix settings
+```
+sudo mkdir -p /data/logs/prometheus
+sudo chown -R 65534:65534 /data/logs/prometheus
+sudo chmod -R 775 /data/logs/prometheus
+```
+- Restart prometheus and check logs.
+
+#### Grafana 
+- Make the permissions correct `sudo chown -R 472:472 /data/configs/grafana`
 
