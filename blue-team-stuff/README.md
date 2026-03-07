@@ -318,3 +318,11 @@ Should show something like
 [Classification: Potentially Bad Traffic] 
 ```
 
+### 3. Adguard
+- Go to `http://server-ip:3000` on your client.
+- Set up interface on all interfaces at 3000 for web and 53 for DNS server.
+- Go to your router setup (something like `http://192.168.1.1`).
+- Go to LAN setup
+- Change DNS to user defined and to your server IP address.
+- Disconnect and reconnect your device to Wi-Fi and check if there are entries on the AdGuard dashboard.
+
