@@ -3,8 +3,7 @@
 - Firewall - `ufw`
 - IDS - `Suricata`
 - DNS Filtering - `AdGuard`
-- HIDS - `wazuh`
-- SIEM - `splunk community`
+- SIEM - `wazuh`
 - Monitoring - `Prometheus and Grafana`
 - Logs - `Loki`
 
@@ -12,9 +11,9 @@
 Creating directory structure
 ```
 cd /data/configs
-sudo mkdir suricata adguard wazuh splunk prometheus grafana loki promtail
+sudo mkdir suricata adguard wazuh prometheus grafana loki promtail
 cd /data/logs
-sudo mkdir suricata wazuh splunk loki
+sudo mkdir suricata wazuh  loki
 sudo chown -R $USER:$USER /data/configs/*
 sudo chown -R $USER:$USER /data/logs/*
 ```
@@ -41,7 +40,6 @@ services:
     cap_add:
       - NET_ADMIN
       - NET_RAW
-      - SYS_NICE
     volumes:
       - /data/configs/suricata:/etc/suricata
       - /data/logs/suricata:/var/log/suricata
@@ -75,6 +73,10 @@ services:
       - /data/logs/adguard:/opt/adguardhome/work
     restart: unless-stopped
 ```
+First, let us make port 53 free 
+- Go to `/etc/systemd/resolved.conf`
+- Find `#DNSStubListener=yes` and change it to no and remove comment.
+- `sudo systemctl restart systemd-resolved`
 Start:
 ```
 docker-compose up -d
