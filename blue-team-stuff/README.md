@@ -156,3 +156,29 @@ Start
 ```
 docker-compose up -d
 ```
+
+### 5. Prometheus
+```
+cd ~/homelab/monitoring
+mkdir prometheus
+cd prometheus
+vim docker-compose.yml
+```
+Insert this
+```
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - /data/configs/prometheus:/etc/prometheus
+      - /data/logs/prometheus:/prometheus
+    restart: unless-stopped
+```
+Start
+```
+docker-compose up -d
+```
+
