@@ -87,7 +87,7 @@ Start:
 docker-compose up -d
 ```
 
-### 4. 
+### 4. Splunk
 ```
 cd  ~/homelab/security
 mkdir splunk
@@ -101,6 +101,7 @@ services:
     image: splunk/splunk:latest
     container_name: splunk
     environment:
+      - SPLUNK_GENERAL_TERMS=--accept-sgt-current-at-splunk-com
       - SPLUNK_START_ARGS=--accept-license
       - SPLUNK_PASSWORD=splunkpassword
       - SPLUNK_HEC_TOKEN=suricata-token
@@ -112,6 +113,32 @@ services:
     volumes:
       - /data/configs/splunk:/opt/splunk/etc
       - /data/logs/splunk:/opt/splunk/var
+    restart: unless-stopped
+```
+Start
+```
+docker-compose up -d
+```
+
+### Splunk Forwarder
+```
+cd ~/homelab/security
+mkdir splunk-forwarder
+cd splunk-forwarder
+vim docker-compose.yml
+```
+Insert
+```
+services:
+  splunk-forwarder:
+    image: splunk/universalforwarder:latest
+    container_name: splunk-forwarder
+    environment:
+      - SPLUNK_START_ARGS=--accept-license
+      - SPLUNK_PASSWORD=fwdpwd
+      - SPLUNK_FORWARD_SERVER=splunk:9997
+    volumes:
+      - /data/logs/suricata:/logs/suricata
     restart: unless-stopped
 ```
 Start
