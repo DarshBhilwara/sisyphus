@@ -3,7 +3,7 @@
 - Firewall - `ufw`
 - IDS - `Suricata`
 - DNS Filtering - `AdGuard`
-- SIEM - `wazuh`
+- SIEM - `splunk`
 - Monitoring - `Prometheus and Grafana`
 - Logs - `Loki`
 
@@ -11,9 +11,9 @@
 Creating directory structure
 ```
 cd /data/configs
-sudo mkdir suricata adguard wazuh prometheus grafana loki promtail
+sudo mkdir suricata adguard splunk prometheus grafana loki promtail
 cd /data/logs
-sudo mkdir suricata wazuh  loki
+sudo mkdir suricata splunk  loki
 sudo chown -R $USER:$USER /data/configs/*
 sudo chown -R $USER:$USER /data/logs/*
 ```
@@ -86,84 +86,32 @@ Start:
 ```
 docker-compose up -d
 ```
-### 4. Wazuh
+
+### 4. 
 ```
-cd ~/homelab/security
-mkdir wazuh
-cd wazuh
+cd  ~/homelab/security
+mkdir splunk
+cd splunk
 vim docker-compose.yml
 ```
 Insert this
 ```
 services:
-  wazuh.indexer:
-    image: wazuh/wazuh-indexer:4.14.3
-    container_name: wazuh-indexer
+  splunk:
+    image: splunk/splunk:latest
+    container_name: splunk
     environment:
-      - discovery.type=single-node
-      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
-      - bootstrap.memory_lock=true
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
+      - SPLUNK_START_ARGS=--accept-license
+      - SPLUNK_PASSWORD=splunkpassword
+      - SPLUNK_HEC_TOKEN=suricata-token
+      - SPLUNK_ENABLE_LISTEN=9997
     ports:
-      - "9200:9200"
-    restart: unless-stopped
-
-  wazuh.manager:
-    image: wazuh/wazuh-manager:4.14.3
-    container_name: wazuh-manager
-    depends_on:
-      - wazuh.indexer
-    ports:
-      - "1514:1514/tcp"
-      - "1515:1515/tcp"
-      - "514:514/udp"
-      - "55000:55000"
-    restart: unless-stopped
-
-  wazuh.dashboard:
-    image: wazuh/wazuh-dashboard:4.14.3
-    container_name: wazuh-dashboard
-    depends_on:
-      - wazuh.indexer
-      - wazuh.manager
-    ports:
-      - "5601:5601"
-    environment:
-      - OPENSEARCH_HOSTS=https://wazuh-indexer:9200
-      - WAZUH_API_URL=https://wazuh-manager
-      - API_USERNAME=wazuh
-      - API_PASSWORD=wazuh
-    restart: unless-stopped
-```
-Start
-```
-docker-compose up -d
-```
-
-### 5. Prometheus
-```
-cd ~/homelab/monitoring
-mkdir prometheus
-cd prometheus
-vim docker-compose.yml
-```
-Insert this
-```
-services:
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    ports:
-      - "9090:9090"
+      - "8000:8000"
+      - "8088:8088"
+      - "9997:9997"
     volumes:
-      - /data/configs/prometheus:/etc/prometheus
-      - /data/logs/prometheus:/prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.retention.time=3d"
+      - /data/configs/splunk:/opt/splunk/etc
+      - /data/logs/splunk:/opt/splunk/var
     restart: unless-stopped
 ```
 Start
@@ -171,35 +119,9 @@ Start
 docker-compose up -d
 ```
 
-### 6. Grafana
+### 5. Loki
 ```
 cd ~/homelab/monitoring
-mkdir grafana
-cd grafana
-vim docker-compose.yml
-```
-Insert this
-```
-services:
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    ports:
-      - "3002:3000"
-    volumes:
-      - /data/configs/grafana:/var/lib/grafana
-    restart: unless-stopped
-```
-Start
-```
-docker-compose up -d
-```
-
-### 7. Loki
-```
-cd ~/homelab/monitoring
-mkdir loki
-cd loki
 vim docker-compose.yml
 ```
 Insert this
@@ -215,18 +137,7 @@ services:
       - /data/configs/loki:/etc/loki
       - /data/logs/loki:/loki
     restart: unless-stopped
-```
 
-### 8. Promtail
-```
-cd ~/homelab/monitoring
-mkdir promtail
-cd loki
-vim docker-compose.yml
-```
-Insert this
-```
-services:
   promtail:
     image: grafana/promtail:latest
     container_name: promtail
@@ -236,7 +147,31 @@ services:
       - /data/configs/promtail:/etc/promtail
       - /var/log:/var/log
     restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - /data/configs/prometheus:/etc/prometheus
+      - /data/logs/prometheus:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=3d"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3002:3000"
+    volumes:
+      - /data/configs/grafana:/var/lib/grafana
+    restart: unless-stopped
+
 ```
+
 Start:
 ```
 docker-compose up -d
@@ -248,6 +183,7 @@ docker-compose up -d
 sudo ufw reset
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
+sudo ufw allow from 192.168.1.0/24 to any port 7575
 sudo ufw allow <SSH-PORT>/tcp
 ```
 Allow other services
@@ -260,10 +196,9 @@ sudo ufw allow 53/tcp
 sudo ufw allow 53/udp
 sudo ufw allow 3000/tcp
 sudo ufw allow 80/tcp
-sudo ufw allow 1514/tcp
-sudo ufw allow 1515/tcp
-sudo ufw allow 514/udp
-sudo ufw allow 5601/tcp
+sudo ufw allow 8000/tcp
+sudo ufw allow 8088/tcp
+sudo ufw allow 9997/tcp
 sudo ufw allow in on docker0
 sudo ufw allow 8384/tcp
 sudo ufw allow 22000/tcp
@@ -422,9 +357,14 @@ global:
   scrape_interval: 30s
 
 scrape_configs:
-  - job_name: prometheus
-    static_configs:
-      - targets: ['localhost:9090']
+
+- job_name: prometheus
+  static_configs:
+    - targets: ['localhost:9090']
+
+- job_name: node
+  static_configs:
+    - targets: ['host.docker.internal:9100']
 ```
 - Fix settings
 ```
@@ -437,3 +377,8 @@ sudo chmod -R 775 /data/logs/prometheus
 #### Grafana 
 - Make the permissions correct `sudo chown -R 472:472 /data/configs/grafana`
 
+## Connecting it together
+- Open grafana `http://server-ip:3002`
+- Log in with `admin:admin`
+- Go to Connections and Add Connection and search for Loki and make the URL `http://loki:3100`
+- Next, add another connection and search for Prometheus and make the URL `http://prometheus:9090`
