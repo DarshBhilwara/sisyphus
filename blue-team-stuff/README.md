@@ -182,3 +182,26 @@ Start
 docker-compose up -d
 ```
 
+### 6. Grafana
+```
+cd ~/homelab/monitoring
+mkdir grafana
+cd grafana
+vim docker-compose.yml
+```
+Insert this
+```
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3002:3000"
+    volumes:
+      - /data/configs/grafana:/var/lib/grafana
+    restart: unless-stopped
+```
+Start
+```
+docker-compose up -d
+```
