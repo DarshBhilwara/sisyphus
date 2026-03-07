@@ -224,6 +224,7 @@ services:
   loki:
     image: grafana/loki:latest
     container_name: loki
+    command: -config.file=/etc/loki/loki-config.yml
     ports:
       - "3100:3100"
     volumes:
@@ -325,4 +326,73 @@ Should show something like
 - Go to LAN setup
 - Change DNS to user defined and to your server IP address.
 - Disconnect and reconnect your device to Wi-Fi and check if there are entries on the AdGuard dashboard.
+
+### 4. SIEM
+- Set loki permissions `sudo chown -R 10001:10001 /data/logs/loki`
+- Loki config at `/data/configs/loki/loki-config.yml`
+```
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+
+common:
+  path_prefix: /loki
+  replication_factor: 1
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2020-05-15
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+storage_config:
+  filesystem:
+    directory: /loki/chunks
+
+limits_config:
+  retention_period: 72h
+
+compactor:
+  working_directory: /loki/compactor
+  compaction_interval: 10m
+```
+- Restart loki.
+
+- Promtail config at `/data/configs/promtail/promtail.yml`
+```
+server:
+  http_listen_port: 9080
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+
+- job_name: suricata
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      job: suricata
+      __path__: /logs/suricata/*.log
+
+- job_name: system
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      job: syslog
+      __path__: /var/log/*.log
+```
 
