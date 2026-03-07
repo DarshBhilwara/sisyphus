@@ -25,6 +25,8 @@ sudo systemctl enable ufw
 ```
 ### 2. Suricata
 ```
+sudo mkdir /data/configs/suricata/rules                                             
+sudo chown -R $USER:$USER /data/configs/suricata 
 cd ~/homelab/security
 mkdir suricata
 cd suricata
@@ -40,9 +42,12 @@ services:
     cap_add:
       - NET_ADMIN
       - NET_RAW
+      - SYS_NICE
     volumes:
       - /data/configs/suricata:/etc/suricata
       - /data/logs/suricata:/var/log/suricata
+      - /data/configs/suricata/rules:/var/lib/suricata/rules
+    command: -i <your network device(en.../wl...)>
     restart: unless-stopped
 ```
 Start:
@@ -291,3 +296,25 @@ Check
 ```
 sudo ufw status numbered
 ```
+
+### 2. Suricata
+- Update rules
+```
+docker exec -it suricata bash
+suricata-update
+exit
+docker restart suricata
+```
+Test
+```
+curl http://testmynids.org/uid/index.html
+```
+Check
+```
+tail -f /data/logs/suricata/fast.log
+```
+Should show something like
+```
+[Classification: Potentially Bad Traffic] 
+```
+
