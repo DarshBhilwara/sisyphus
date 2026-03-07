@@ -205,3 +205,47 @@ Start
 ```
 docker-compose up -d
 ```
+
+### 7. Loki
+```
+cd ~/homelab/monitoring
+mkdir loki
+cd loki
+vim docker-compose.yml
+```
+Insert this
+```
+services:
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - /data/configs/loki:/etc/loki
+      - /data/logs/loki:/loki
+    restart: unless-stopped
+```
+
+### 8. Promtail
+```
+cd ~/homelab/monitoring
+mkdir promtail
+cd loki
+vim docker-compose.yml
+```
+Insert this
+```
+services:
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - /data/logs:/logs
+      - /data/configs/promtail:/etc/promtail
+    restart: unless-stopped
+```
+Start:
+```
+docker-compose up -d
+```
