@@ -249,3 +249,45 @@ Start:
 ```
 docker-compose up -d
 ```
+
+## Setup
+### 1. ufw
+```
+sudo ufw reset
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow <SSH-PORT>/tcp
+```
+Allow other services
+```
+sudo ufw allow 7575/tcp
+sudo ufw allow 3001/tcp
+sudo ufw allow 8096/tcp
+sudo ufw allow 22300/tcp
+sudo ufw allow 53/tcp
+sudo ufw allow 53/udp
+sudo ufw allow 3000/tcp
+sudo ufw allow 80/tcp
+sudo ufw allow 1514/tcp
+sudo ufw allow 1515/tcp
+sudo ufw allow 514/udp
+sudo ufw allow 5601/tcp
+sudo ufw allow in on docker0
+sudo ufw allow 8384/tcp
+sudo ufw allow 22000/tcp
+sudo ufw allow 22000/udp
+sudo ufw allow 21027/udp
+sudo ufw allow 9091/tcp
+```
+Logging
+```
+sudo ufw logging medium
+```
+Start:
+```
+sudo ufw enable
+```
+Check
+```
+sudo ufw status numbered
+```
