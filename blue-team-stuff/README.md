@@ -180,6 +180,9 @@ services:
     volumes:
       - /data/configs/prometheus:/etc/prometheus
       - /data/logs/prometheus:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=3d"
     restart: unless-stopped
 ```
 Start
@@ -428,4 +431,19 @@ scrape_configs:
     labels:
       job: syslog
       __path__: /var/log/*.log
-  ```
+```
+Restart promtail and check logs.
+
+#### Prometheus
+- Write this in the `/data/configs/prometheus/prometheus.yml`
+```
+global:
+  scrape_interval: 30s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+```
+Restart prometheus and check logs.
+
