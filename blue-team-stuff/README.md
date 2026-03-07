@@ -246,9 +246,11 @@ services:
   promtail:
     image: grafana/promtail:latest
     container_name: promtail
+    command: -config.file=/etc/promtail/promtail.yml
     volumes:
       - /data/logs:/logs
       - /data/configs/promtail:/etc/promtail
+      - /var/log:/var/log
     restart: unless-stopped
 ```
 Start:
@@ -328,6 +330,7 @@ Should show something like
 - Disconnect and reconnect your device to Wi-Fi and check if there are entries on the AdGuard dashboard.
 
 ### 4. SIEM
+#### Loki
 - Set loki permissions `sudo chown -R 10001:10001 /data/logs/loki`
 - Loki config at `/data/configs/loki/loki-config.yml`
 ```
@@ -396,3 +399,33 @@ scrape_configs:
       __path__: /var/log/*.log
 ```
 
+#### Promtail
+- Write this in the config file `/data/configs/promtail/promtail.yml`
+```
+server:
+  http_listen_port: 9080
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+
+- job_name: suricata
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      job: suricata
+      __path__: /logs/suricata/*.log
+
+- job_name: system
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      job: syslog
+      __path__: /var/log/*.log
+  ```
