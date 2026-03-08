@@ -84,8 +84,8 @@ To set up homelab services, refer [homelab-services](./homelab-services/README.m
 ### 7. Blue Team Stack
 Now that we have a fully functional homelab with all applications running, we are gonna install all the blue team softwares required for cybersecurity. Refer [blue-team-stuff](./blue-team-stuff/README.md)
 
-### 8. Backups and misc
-Now that we have a fully functioning homelab with all the blue team softwares, we will go on to set up backups and cron jobs.
+### 8. Backups and Cron Jobs
+Now that we have a fully functioning homelab with all the blue team softwares, we will go on to set up [backups and cron jobs](./backups/README.md).
 
 ### 9. Other Tweaks
 #### Connection
@@ -107,3 +107,4 @@ max xmit = 65535
 # Comments while making the project
 - 4th March 2026 - This project was supposed to be set up with kubernetes but after I learned the whole thing and installed k3s, the RAM usage went up to 2GB and my current infrastructure cannot support the whole working with kubernetes added to it. So yeah, sadly after wasting two days on it, I have to pivot away from it. 
 - 7th March 2026 - I changed the dashboard from `Homepage` to `Homarr` because of the ease of setting it up and it generally looks better.
+- 9th March 2026 - I have removed a full-fledged SIEM from my homelab because it was not possible to run on my hardware.
