@@ -3,7 +3,6 @@
 - Firewall - `ufw`
 - IDS - `Suricata`
 - DNS Filtering - `AdGuard`
-- SIEM - `splunk`
 - Monitoring - `Prometheus and Grafana`
 - Logs - `Loki`
 
@@ -11,9 +10,9 @@
 Creating directory structure
 ```
 cd /data/configs
-sudo mkdir suricata adguard splunk prometheus grafana loki promtail
+sudo mkdir suricata adguard prometheus grafana loki promtail
 cd /data/logs
-sudo mkdir suricata splunk  loki
+sudo mkdir suricata loki
 sudo chown -R $USER:$USER /data/configs/*
 sudo chown -R $USER:$USER /data/logs/*
 ```
@@ -87,66 +86,7 @@ Start:
 docker-compose up -d
 ```
 
-### 4. Splunk
-```
-cd  ~/homelab/security
-mkdir splunk
-cd splunk
-vim docker-compose.yml
-```
-Insert this
-```
-services:
-  splunk:
-    image: splunk/splunk:latest
-    container_name: splunk
-    environment:
-      - SPLUNK_GENERAL_TERMS=--accept-sgt-current-at-splunk-com
-      - SPLUNK_START_ARGS=--accept-license
-      - SPLUNK_PASSWORD=splunkpassword
-      - SPLUNK_HEC_TOKEN=suricata-token
-      - SPLUNK_ENABLE_LISTEN=9997
-    ports:
-      - "8000:8000"
-      - "8088:8088"
-      - "9997:9997"
-    volumes:
-      - /data/configs/splunk:/opt/splunk/etc
-      - /data/logs/splunk:/opt/splunk/var
-    restart: unless-stopped
-```
-Start
-```
-docker-compose up -d
-```
-
-### Splunk Forwarder
-```
-cd ~/homelab/security
-mkdir splunk-forwarder
-cd splunk-forwarder
-vim docker-compose.yml
-```
-Insert
-```
-services:
-  splunk-forwarder:
-    image: splunk/universalforwarder:latest
-    container_name: splunk-forwarder
-    environment:
-      - SPLUNK_START_ARGS=--accept-license
-      - SPLUNK_PASSWORD=fwdpwd
-      - SPLUNK_FORWARD_SERVER=splunk:9997
-    volumes:
-      - /data/logs/suricata:/logs/suricata
-    restart: unless-stopped
-```
-Start
-```
-docker-compose up -d
-```
-
-### 5. Loki
+### 4. Loki
 ```
 cd ~/homelab/monitoring
 vim docker-compose.yml
