@@ -25,12 +25,15 @@ All the services currently run inside a security hardened single-node k3s cluste
 ### 2. Set up SSH server with firewall hardening
 - Do this by yourself by finding the best ways to authenticate through SSH and connect it to the internet with atmost security. (this is of the most importance but cannot share it because of obvious reasons)
 
-### 3. Disable sleep
+### 3. Set up VPN
+- Refer [vpn-setup](./vpn-setup/README.md) for setting up VPN. 
+
+### 4. Disable sleep
 ```
 sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
 ```
 
-### 4. Docker Installation and Setup
+### 5. Docker Installation and Setup
 
 ```
 sudo apt install docker.io docker-compose
@@ -68,7 +71,7 @@ should give
 Docker Root Dir: /data/docker
 ```
 
-### 5. Setting up directories
+### 6. Setting up directories
 ```
 mkdir homelab
 cd homelab
@@ -78,16 +81,16 @@ sudo mkdir docker nas backups logs configs
 sudo chown -R $USER:$USER /data
 ```
 
-### 6. Homelab services
+### 7. Homelab services
 To set up homelab services, refer [homelab-services](./homelab-services/README.md)
 
-### 7. Blue Team Stack
+### 8. Blue Team Stack
 Now that we have a fully functional homelab with all applications running, we are gonna install all the blue team softwares required for cybersecurity. Refer [blue-team-stuff](./blue-team-stuff/README.md)
 
-### 8. Backups and Cron Jobs
+### 9. Backups and Cron Jobs
 Now that we have a fully functioning homelab with all the blue team softwares, we will go on to set up [backups and cron jobs](./backups/README.md).
 
-### 9. Other Tweaks
+### 10. Other Tweaks
 #### Connection
 If the connection on SMB is slow,
 ```
