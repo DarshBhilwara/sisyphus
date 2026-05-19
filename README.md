@@ -32,6 +32,12 @@ All the services currently run inside a security hardened single-node k3s cluste
 ```
 sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
 ```
+Next, we will make the system work even when lid is closed. In the file `sudo nano /etc/systemd/logind.conf`, add this:
+```
+HandleLidSwitch=ignore
+HandleLidSwitchDocked=ignore
+HandleLidSwitchExternalPower=ignore
+```
 
 ### 5. Docker Installation and Setup
 
