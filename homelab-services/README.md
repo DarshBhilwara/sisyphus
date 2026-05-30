@@ -7,7 +7,7 @@ sudo chown -R $USER:$USER /data/configs/homarr
 cd ~/homelab/apps
 mkdir homarr
 cd homarr
-vim docker-compose.yaml
+vim docker-compose.yml
 ```
 
 Include config like
@@ -242,7 +242,7 @@ We will use `dashdot` for this.
 cd ~/homelab/apps
 mkdir dashdot
 cd dashdot
-vim docker-compose.yaml
+vim docker-compose.yml
 ```
 Insert this
 ```
@@ -262,3 +262,41 @@ docker compose up -d
 ```
 
 Set dashdot up on `http://server-ip:3001` on the client and you may also add it in your dashboard.
+
+# 8, Adguard
+```
+cd ~/homelab/apps
+mkdir adguard
+cd adguard
+vim docker-compose.yml
+```
+Insert this
+```
+services:
+  adguardhome:
+    image: adguard/adguardhome:latest
+    container_name: adguardhome
+    restart: unless-stopped
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "3000:3000/tcp"
+    volumes:
+      - ./work:/opt/adguardhome/work
+      - ./conf:/opt/adguardhome/conf
+```
+Start
+```
+docker-compose up -d 
+```
+Now lets set it up.
+- First go to `<server-ip>:3000` 
+- Next, set up admin listen interface all at port 3000.
+- DNS server listen interface all at port 53.
+- Do next 
+- Next go to your router settings at `http://192.168.0.1` and set up primary DNS as your server IP address.
+- Next, in the router settings, do address reservation of your homelab.
+- Next, on the adguard dashboard, go to Filters>DNS blocklists and add any good blocklist.
+- Next, go to tailscale DNS settings and under global nameserver, add your server's tailscale IP and turn on override DNS servers.
+
+
