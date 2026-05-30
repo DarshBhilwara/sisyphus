@@ -263,7 +263,7 @@ docker compose up -d
 
 Set dashdot up on `http://server-ip:3001` on the client and you may also add it in your dashboard.
 
-# 8, Adguard
+# 8. Adguard
 ```
 cd ~/homelab/apps
 mkdir adguard
@@ -299,4 +299,29 @@ Now lets set it up.
 - Next, on the adguard dashboard, go to Filters>DNS blocklists and add any good blocklist.
 - Next, go to tailscale DNS settings and under global nameserver, add your server's tailscale IP and turn on override DNS servers.
 
+# 9. Bookmarks
+- I did not find any notable service for usage, so I just set up a basic HTML server.
+- Create a basic HTML file in `/data/configs/bookmarks`
+```
+cd ~/homelab/apps
+mkdir bookmarks
+cd bookmarks
+vim docker-compose.yml
+```
+Insert this
+```
+services:
+  bookmarks:
+    image: nginx:alpine
+    container_name: bookmarks
+    restart: unless-stopped
+    ports:
+      - "8088:80"
+    volumes:
+      - /data/configs/bookmarks:/usr/share/nginx/html:ro
+```
+Start
+```
+docker-compose up -d 
+```
 
