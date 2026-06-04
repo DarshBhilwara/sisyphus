@@ -54,7 +54,7 @@ Start:
 docker-compose up -d
 ```
 
-### 3. AdGuard
+### 3. Adguard
 ```
 cd ~/homelab/security
 mkdir adguard
@@ -64,23 +64,18 @@ vim docker-compose.yml
 Insert this
 ```
 services:
-  adguard:
+  adguardhome:
     image: adguard/adguardhome:latest
-    container_name: adguard
+    container_name: adguardhome
     ports:
       - "53:53/tcp"
       - "53:53/udp"
-      - "80:80"
-      - "3000:3000"
+      - "3000:3000/tcp"
     volumes:
       - /data/configs/adguard:/opt/adguardhome/conf
       - /data/logs/adguard:/opt/adguardhome/work
     restart: unless-stopped
 ```
-First, let us make port 53 free 
-- Go to `/etc/systemd/resolved.conf`
-- Find `#DNSStubListener=yes` and change it to no and remove comment.
-- `sudo systemctl restart systemd-resolved`
 Start:
 ```
 docker-compose up -d
@@ -208,12 +203,14 @@ Should show something like
 ```
 
 ### 3. Adguard
-- Go to `http://server-ip:3000` on your client.
-- Set up interface on all interfaces at 3000 for web and 53 for DNS server.
-- Go to your router setup (something like `http://192.168.1.1`).
-- Go to LAN setup
-- Change DNS to user defined and to your server IP address.
-- Disconnect and reconnect your device to Wi-Fi and check if there are entries on the AdGuard dashboard.
+- First go to `<server-ip>:3000` 
+- Next, set up admin listen interface all at port 3000.
+- DNS server listen interface all at port 53.
+- Do next 
+- Next go to your router settings at `http://192.168.0.1` and set up primary DNS as your server IP address.
+- Next, in the router settings, do address reservation of your homelab.
+- Next, on the adguard dashboard, go to Filters>DNS blocklists and add any good blocklist.
+- Next, go to tailscale DNS settings and under global nameserver, add your server's tailscale IP and turn on override DNS servers.
 
 ### 4. SIEM
 #### Loki
