@@ -5,6 +5,7 @@
 - DNS Filtering - `AdGuard`
 - Monitoring - `Prometheus and Grafana`
 - Logs - `Loki`
+- Exporter - `node-exporter` - convert information to prometheus metrics.
 
 ## Installation
 Creating directory structure
@@ -81,7 +82,7 @@ Start:
 docker-compose up -d
 ```
 
-### 4. Loki
+### 4. Monitoring
 ```
 cd ~/homelab/monitoring
 vim docker-compose.yml
@@ -131,6 +132,16 @@ services:
     volumes:
       - /data/configs/grafana:/var/lib/grafana
     restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    command:
+      - '--path.rootfs=/host'
 
 ```
 
@@ -212,137 +223,20 @@ Should show something like
 - Next, on the adguard dashboard, go to Filters>DNS blocklists and add any good blocklist.
 - Next, go to tailscale DNS settings and under global nameserver, add your server's tailscale IP and turn on override DNS servers.
 
-### 4. SIEM
-#### Loki
-- Set loki permissions `sudo chown -R 10001:10001 /data/logs/loki`
-- Loki config at `/data/configs/loki/loki-config.yml`
-```
-auth_enabled: false
-
-server:
-  http_listen_port: 3100
-
-common:
-  path_prefix: /loki
-  replication_factor: 1
-  ring:
-    instance_addr: 127.0.0.1
-    kvstore:
-      store: inmemory
-
-schema_config:
-  configs:
-    - from: 2020-05-15
-      store: tsdb
-      object_store: filesystem
-      schema: v13
-      index:
-        prefix: index_
-        period: 24h
-storage_config:
-  filesystem:
-    directory: /loki/chunks
-
-limits_config:
-  retention_period: 72h
-
-compactor:
-  working_directory: /loki/compactor
-  compaction_interval: 10m
-```
-- Restart loki.
-
-- Promtail config at `/data/configs/promtail/promtail.yml`
-```
-server:
-  http_listen_port: 9080
-
-positions:
-  filename: /tmp/positions.yaml
-
-clients:
-  - url: http://loki:3100/loki/api/v1/push
-
-scrape_configs:
-
-- job_name: suricata
-  static_configs:
-  - targets:
-      - localhost
-    labels:
-      job: suricata
-      __path__: /logs/suricata/*.log
-
-- job_name: system
-  static_configs:
-  - targets:
-      - localhost
-    labels:
-      job: syslog
-      __path__: /var/log/*.log
-```
-
-#### Promtail
-- Write this in the config file `/data/configs/promtail/promtail.yml`
-```
-server:
-  http_listen_port: 9080
-
-positions:
-  filename: /tmp/positions.yaml
-
-clients:
-  - url: http://loki:3100/loki/api/v1/push
-
-scrape_configs:
-
-- job_name: suricata
-  static_configs:
-  - targets:
-      - localhost
-    labels:
-      job: suricata
-      __path__: /logs/suricata/*.log
-
-- job_name: system
-  static_configs:
-  - targets:
-      - localhost
-    labels:
-      job: syslog
-      __path__: /var/log/*.log
-```
-Restart promtail and check logs.
-
+### 4. Monitoring 
 #### Prometheus
-- Write this in the `/data/configs/prometheus/prometheus.yml`
+Add this in `prometheus.yml` to connect it with node exporter.
 ```
 global:
   scrape_interval: 30s
+  evaluation_interval: 30s
 
 scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
 
-- job_name: prometheus
-  static_configs:
-    - targets: ['localhost:9090']
-
-- job_name: node
-  static_configs:
-    - targets: ['host.docker.internal:9100']
+  - job_name: node-exporter
+    static_configs:
+      - targets: ['node-exporter:9100']
 ```
-- Fix settings
-```
-sudo mkdir -p /data/logs/prometheus
-sudo chown -R 65534:65534 /data/logs/prometheus
-sudo chmod -R 775 /data/logs/prometheus
-```
-- Restart prometheus and check logs.
-
-#### Grafana 
-- Make the permissions correct `sudo chown -R 472:472 /data/configs/grafana`
-
-## Connecting it together
-- Open grafana `http://server-ip:3002`
-- Log in with `admin:admin`
-- Go to Connections and Add Connection and search for Loki and make the URL `http://loki:3100`
-- Next, add another connection and search for Prometheus and make the URL `http://prometheus:9090`
