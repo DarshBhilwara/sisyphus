@@ -168,38 +168,31 @@ Visit `http://server-ip:22300` from client and set up joplin
 
 Reset the password and it will say check email. Go to `http://server-ip:22300/admin/emails` and get the confirmation link.
 
-# 5. Bookmarks 
-We will use `linkding` for this
+# 5. Bookmarks
+- I did not find any notable service for usage, so I just set up a basic HTML server.
+- Create a basic HTML file in `/data/configs/bookmarks`
 ```
-sudo mkdir -p /data/configs/linkding
-sudo chown -R $USER:$USER /data/configs/linkding
-mkdir -p ~/homelab/apps/linkding
-cd ~/homelab/apps/linkding
+cd ~/homelab/apps
+mkdir bookmarks
+cd bookmarks
 vim docker-compose.yml
 ```
 Insert this
 ```
 services:
-  linkding:
-    image: sissbruecker/linkding:latest
-    container_name: linkding
-    ports:
-      - "9091:9090"
-    volumes:
-      - /data/configs/linkding:/etc/linkding/data
+  bookmarks:
+    image: nginx:alpine
+    container_name: bookmarks
     restart: unless-stopped
+    ports:
+      - "8088:80"
+    volumes:
+      - /data/configs/bookmarks:/usr/share/nginx/html:ro
 ```
-Then start
+Start
 ```
-docker-compose up -d
+docker-compose up -d 
 ```
-Create your account
-```
-docker exec -it linkding python manage.py createsuperuser --username=username --email=youremail
-```
-Visit `http://server-ip:9090` on the client and set up your bookmarks
-- Login - `admin`
-- Password - `admin`
 
 # 6. Streaming 
 We will use `jellyfin` for this
@@ -262,32 +255,4 @@ docker compose up -d
 ```
 
 Set dashdot up on `http://server-ip:3001` on the client and you may also add it in your dashboard.
-
-
-
-# 8. Bookmarks
-- I did not find any notable service for usage, so I just set up a basic HTML server.
-- Create a basic HTML file in `/data/configs/bookmarks`
-```
-cd ~/homelab/apps
-mkdir bookmarks
-cd bookmarks
-vim docker-compose.yml
-```
-Insert this
-```
-services:
-  bookmarks:
-    image: nginx:alpine
-    container_name: bookmarks
-    restart: unless-stopped
-    ports:
-      - "8088:80"
-    volumes:
-      - /data/configs/bookmarks:/usr/share/nginx/html:ro
-```
-Start
-```
-docker-compose up -d 
-```
 
