@@ -109,6 +109,7 @@ services:
       - /data/logs:/logs
       - /data/configs/promtail:/etc/promtail
       - /var/log:/var/log
+      - /data/docker/containers:/data/docker/containers:ro
     restart: unless-stopped
 
   prometheus:
@@ -259,3 +260,95 @@ scrape_configs:
     static_configs:
       - targets: ['cadvisor:8080']
 ```
+
+#### Promtail Config
+- Go to `/data/configs/promtail/promtail.yml` and add.
+```
+server:
+  http_listen_port: 9080
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+
+- job_name: suricata
+  static_configs:
+  - targets:
+    - localhost
+    labels:
+      job: suricata
+      __path__: /logs/suricata/*.log
+
+- job_name: system
+  static_configs:
+  - targets:
+    - localhost
+    labels:
+      job: syslog
+      __path__: /var/log/*.log
+
+- job_name: docker
+  static_configs:
+    - targets:
+      - localhost
+      labels:
+        job: docker
+        __path__: /data/docker/containers/*/*.log
+```
+
+#### Loki Config
+- Go to `/data/configs/loki/loki-config.yml` and add
+```
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+
+common:
+  path_prefix: /loki
+
+  replication_factor: 1
+
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2020-05-15
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  filesystem:
+    directory: /loki/chunks
+
+limits_config:
+  retention_period: 72h
+
+  ingestion_rate_strategy: global
+  ingestion_rate_mb: 16
+  ingestion_burst_size_mb: 32
+
+compactor:
+  working_directory: /loki/compactor
+
+  compaction_interval: 10m
+
+  retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 50
+
+  delete_request_store: filesystem
+```
+
