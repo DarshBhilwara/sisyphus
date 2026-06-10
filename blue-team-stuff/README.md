@@ -143,6 +143,20 @@ services:
     command:
       - '--path.rootfs=/host'
 
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    restart: unless-stopped
+
+    ports:
+      - "2834:8080"
+
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+
 ```
 
 Start:
@@ -224,7 +238,7 @@ Should show something like
 - Next, go to tailscale DNS settings and under global nameserver, add your server's tailscale IP and turn on override DNS servers.
 
 ### 4. Monitoring 
-#### Prometheus
+#### Prometheus Config
 Add this in `prometheus.yml` to connect it with node exporter.
 ```
 global:
@@ -238,5 +252,10 @@ scrape_configs:
 
   - job_name: node-exporter
     static_configs:
-      - targets: ['node-exporter:9100']
+      - targets: ['node-exporter:9100']'
+
+
+  - job_name: cadvisor
+    static_configs:
+      - targets: ['cadvisor:8080']
 ```
