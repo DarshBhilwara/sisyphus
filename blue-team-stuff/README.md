@@ -366,3 +366,6 @@ compactor:
   delete_request_store: filesystem
 ```
 
+#### Grafana
+- First, we add data sources to Grafana(at port 3002), `Connections->Data Sources->Add Data Source->http://loki:3100`
+- Next similarly, add prometheus `http://prometheus:9090` 
