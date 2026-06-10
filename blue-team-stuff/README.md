@@ -148,15 +148,25 @@ services:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
     restart: unless-stopped
-
     ports:
       - "2834:8080"
-
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker:/var/lib/docker:ro
+
+  adguard-exporter:
+    image: ghcr.io/henrywhitaker3/adguard-exporter:latest
+    container_name: adguard-exporter
+    environment:
+      - ADGUARD_SERVERS=http://localhost:3000
+      - ADGUARD_USERNAMES=youruser
+      - ADGUARD_PASSWORDS=yourpw
+      - INTERVAL=30s
+    ports:
+      - "9618:9618"
+    restart: unless-stopped
 
 ```
 
@@ -240,7 +250,7 @@ Should show something like
 
 ### 4. Monitoring 
 #### Prometheus Config
-Add this in `prometheus.yml` to connect it with node exporter.
+Add this in `/data/configs/prometheus/prometheus.yml` to connect it with all the required services.
 ```
 global:
   scrape_interval: 30s
@@ -259,6 +269,10 @@ scrape_configs:
   - job_name: cadvisor
     static_configs:
       - targets: ['cadvisor:8080']
+
+  - job_name: adguard-exporter
+    static_configs:
+      - targets: ['adguard-exporter:9618']
 ```
 
 #### Promtail Config
