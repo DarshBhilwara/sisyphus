@@ -181,28 +181,28 @@ docker-compose up -d
 sudo ufw reset
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
-sudo ufw allow from 192.168.1.0/24 to any port 7575
-sudo ufw allow <SSH-PORT>/tcp
+sudo ufw allow in on tailscale0 # tailscale
+sudo ufw allow <SSH-PORT>/tcp 
 ```
 Allow other services
 ```
-sudo ufw allow 7575/tcp
-sudo ufw allow 3001/tcp
-sudo ufw allow 8096/tcp
-sudo ufw allow 22300/tcp
-sudo ufw allow 53/tcp
-sudo ufw allow 53/udp
-sudo ufw allow 3000/tcp
-sudo ufw allow 80/tcp
-sudo ufw allow 8000/tcp
-sudo ufw allow 8088/tcp
-sudo ufw allow 9997/tcp
-sudo ufw allow in on docker0
-sudo ufw allow 8384/tcp
+sudo ufw allow from 192.168.1.0/24 to any port 7575 proto tcp # homarr
+sudo ufw allow from 192.168.1.0/24 to any port 3001 proto tcp # dashdot
+sudo ufw allow from 192.168.1.0/24 to any port 8096 proto tcp # jellyfin
+sudo ufw allow from 192.168.1.0/24 to any port 22300 proto tcp # joplin
+sudo ufw allow from 192.168.1.0/24 to any port 53 proto tcp # adguard
+sudo ufw allow from 192.168.1.0/24 to any port 53 proto udp # adguard
+sudo ufw allow from 192.168.1.0/24 to any port 3000 proto tcp # adguard
+sudo ufw allow from 192.168.1.0/24 to any port 8088 proto tcp # bookmarks
+sudo ufw allow in on docker0 # docker 
+sudo ufw allow from 192.168.1.0/24 to any port 3002 proto tcp # grafana
+sudo ufw allow from 192.168.1.0/24 to any port 9090 proto tcp # prometheus
+sudo ufw allow from 192.168.1.0/24 to any port 2834 proto tcp # cadvisor
+sudo ufw allow from 192.168.1.0/24 to any port 9618 proto tcp # adguard exporter
+sudo ufw allow from 192.168.1.0/24 to any port 8384 proto tcp # syncthing
 sudo ufw allow 22000/tcp
 sudo ufw allow 22000/udp
 sudo ufw allow 21027/udp
-sudo ufw allow 9091/tcp
 ```
 Logging
 ```
