@@ -5,12 +5,10 @@ Sisyphus is a security-first, homelab focused on blue-team detection, monitoring
 
 The project focuses on:
 - intrusion detection
-- logging and SIEM
+- logging and monitoring
 - network visibility
 - secure remote access
 - general homelab things
-
-All the services currently run inside a security hardened single-node k3s cluster.
 
 ## Current Hardware
 - HP Laptop
@@ -22,27 +20,10 @@ All the services currently run inside a security hardened single-node k3s cluste
 ### 1. Ubuntu Server
 - Refer [os-setup](./os-setup/README.md) for setting up the operating system.
 
-### 2. Set up SSH server with firewall hardening
-- Do this by yourself by finding the best ways to authenticate through SSH and connect it to the internet with atmost security. (this is of the most importance but cannot share it because of obvious reasons)
-
-### 3. Set up VPN
-- Refer [vpn-setup](./vpn-setup/README.md) for setting up VPN. 
-
-### 4. Disable sleep
-```
-sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
-```
-Next, we will make the system work even when lid is closed. In the file `sudo nano /etc/systemd/logind.conf`, add this:
-```
-HandleLidSwitch=ignore
-HandleLidSwitchDocked=ignore
-HandleLidSwitchExternalPower=ignore
-```
-
-### 5. Docker Installation and Setup
+### 2. Docker Installation and Setup
 
 ```
-sudo apt install docker.io docker-compose
+sudo apt install docker.io docker-compose tmux
 ```
 
 Add your user to the docker group:
@@ -75,6 +56,23 @@ docker info | grep "Docker Root Dir"
 should give
 ```
 Docker Root Dir: /data/docker
+```
+
+### 3. Set up SSH server with firewall hardening
+- Do this by yourself by finding the best ways to authenticate through SSH and connect it to the internet with atmost security. (this is of the most importance but cannot share it because of obvious reasons)
+
+### 4. Set up VPN and Reverse Proxy
+- Refer [vpn-setup](./vpn-setup/README.md) for setting up VPN and reverse proxy.. 
+
+### 5. Disable sleep
+```
+sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+```
+Next, we will make the system work even when lid is closed. In the file `sudo nano /etc/systemd/logind.conf`, add this:
+```
+HandleLidSwitch=ignore
+HandleLidSwitchDocked=ignore
+HandleLidSwitchExternalPower=ignore
 ```
 
 ### 6. Setting up directories
