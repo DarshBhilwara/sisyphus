@@ -5,7 +5,7 @@
 - DNS Filtering - `AdGuard`
 - Monitoring - `Prometheus and Grafana`
 - Logs - `Loki`
-- Exporter - `node-exporter` - convert information to prometheus metrics.
+- Exporter - `node-exporter`, `adguard-exporter` - convert information to prometheus metrics.
 
 ## Installation
 Creating directory structure
@@ -263,7 +263,7 @@ scrape_configs:
 
   - job_name: node-exporter
     static_configs:
-      - targets: ['node-exporter:9100']'
+      - targets: ['node-exporter:9100']
 
 
   - job_name: cadvisor
