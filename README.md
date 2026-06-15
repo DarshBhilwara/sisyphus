@@ -1,5 +1,5 @@
 # Sisyphus
-
+![./dashboard.png](dashboard.png)
 ## Intro
 Sisyphus is a security-first, homelab focused on blue-team detection, monitoring, and incident response, built on Ubuntu Server. The project is named so because of the number of times I had to start over everything while working on this.
 
