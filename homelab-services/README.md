@@ -26,6 +26,18 @@ services:
     restart: unless-stopped
     healthcheck:
       disable: true
+    networks:
+      - default
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.homarr.rule=Host(`homarr.home`)
+      - traefik.http.services.homarr.loadbalancer.server.port=7575
+
+networks:
+  proxy:
+    external: true
 ```
 Run
 ```
@@ -141,21 +153,33 @@ services:
       - "22300:22300"
     environment:
       APP_PORT: 22300
-      APP_BASE_URL: http://server-ip:22300
+      APP_BASE_URL: http://joplin.home
       DB_CLIENT: pg
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
       POSTGRES_USER: joplin
       POSTGRES_PASSWORD: password
       POSTGRES_DATABASE: joplindb
-      MAILER_ENABLED=1
-      MAILER_HOST=smtp.gmail.com
-      MAILER_PORT=587
-      MAILER_SECURITY=starttls
-      MAILER_AUTH_USER=my_email_address
-      MAILER_AUTH_PASSWORD=my_email_password
-      MAILER_NOREPLY_NAME=joplin-server
-      MAILER_NOREPLY_EMAIL=my_email_address
+      MAILER_ENABLED: 1
+      MAILER_HOST: smtp.gmail.com
+      MAILER_PORT: 587
+      MAILER_SECURITY: starttls
+      MAILER_AUTH_USER: my_email_address
+      MAILER_AUTH_PASSWORD: my_email_password
+      MAILER_NOREPLY_NAME: joplin-server
+      MAILER_NOREPLY_EMAIL: my_email_address
+
+    networks:
+      - default
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.joplin.rule=Host(`joplin.home`)
+      - traefik.http.services.joplin.loadbalancer.server.port=22300
+networks:
+  proxy:
+    external: true
 ```
 Run by 
 ```
@@ -188,6 +212,17 @@ services:
       - "8088:80"
     volumes:
       - /data/configs/bookmarks:/usr/share/nginx/html:ro
+    networks:
+      - default
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.bookmarks.rule=Host(`bookmarks.home`)
+      - traefik.http.services.bookmarks.loadbalancer.server.port=80
+networks:
+  proxy:
+    external: true
 ```
 Start
 ```
@@ -222,6 +257,17 @@ services:
     devices:
       - /dev/dri:/dev/dri
     restart: unless-stopped
+    networks:
+      - default
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.jellyfin.rule=Host(`jellyfin.home`)
+      - traefik.http.services.jellyfin.loadbalancer.server.port=8096
+networks:
+  proxy:
+    external: true
 ```
 Then start
 ```
@@ -248,6 +294,17 @@ services:
     volumes:
       - /:/mnt/host:ro
     restart: unless-stopped
+    networks:
+      - default
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.dashdot.rule=Host(`dashdot.home`)
+      - traefik.http.services.dashdot.loadbalancer.server.port=3001
+networks:
+  proxy:
+    external: true
 ```
 Start
 ```

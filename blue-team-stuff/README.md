@@ -76,6 +76,17 @@ services:
       - /data/configs/adguard:/opt/adguardhome/conf
       - /data/logs/adguard:/opt/adguardhome/work
     restart: unless-stopped
+    networks:
+      - default
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.adguard.rule=Host(`adguard.home`)
+      - traefik.http.services.adguard.loadbalancer.server.port=3000
+networks:
+  proxy:
+    external: true
 ```
 Start:
 ```
@@ -100,6 +111,14 @@ services:
       - /data/configs/loki:/etc/loki
       - /data/logs/loki:/loki
     restart: unless-stopped
+    networks:
+      - default
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.loki.rule=Host(`loki.home`)
+      - traefik.http.services.loki.loadbalancer.server.port=3100
 
   promtail:
     image: grafana/promtail:latest
@@ -111,6 +130,23 @@ services:
       - /var/log:/var/log
       - /data/docker/containers:/data/docker/containers:ro
     restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3002:3000"
+    volumes:
+      - /data/configs/grafana:/var/lib/grafana
+    restart: unless-stopped
+    networks:
+      - default
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.grafana.rule=Host(`grafana.home`)
+      - traefik.http.services.grafana.loadbalancer.server.port=3000
 
   prometheus:
     image: prom/prometheus:latest
@@ -124,15 +160,14 @@ services:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.retention.time=3d"
     restart: unless-stopped
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    ports:
-      - "3002:3000"
-    volumes:
-      - /data/configs/grafana:/var/lib/grafana
-    restart: unless-stopped
+    networks:
+      - default
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.prometheus.rule=Host(`prometheus.home`)
+      - traefik.http.services.prometheus.loadbalancer.server.port=9090
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -168,6 +203,9 @@ services:
       - "9618:9618"
     restart: unless-stopped
 
+networks:
+  proxy:
+    external: true
 ```
 
 Start:
@@ -200,6 +238,7 @@ sudo ufw allow from 192.168.1.0/24 to any port 9090 proto tcp # prometheus
 sudo ufw allow from 192.168.1.0/24 to any port 2834 proto tcp # cadvisor
 sudo ufw allow from 192.168.1.0/24 to any port 9618 proto tcp # adguard exporter
 sudo ufw allow from 192.168.1.0/24 to any port 8384 proto tcp # syncthing
+sudo ufw allow from 192.168.1.0/24 to any port 80 proto tcp # traefik
 sudo ufw allow 22000/tcp
 sudo ufw allow 22000/udp
 sudo ufw allow 21027/udp
