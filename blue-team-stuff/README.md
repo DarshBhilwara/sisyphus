@@ -216,32 +216,11 @@ docker-compose up -d
 ## Setup
 ### 1. ufw
 ```
-sudo ufw reset
+sudo ufw --force reset
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
-sudo ufw allow in on tailscale0 # tailscale
-sudo ufw allow <SSH-PORT>/tcp 
-```
-Allow other services
-```
-sudo ufw allow from 192.168.1.0/24 to any port 7575 proto tcp # homarr
-sudo ufw allow from 192.168.1.0/24 to any port 3001 proto tcp # dashdot
-sudo ufw allow from 192.168.1.0/24 to any port 8096 proto tcp # jellyfin
-sudo ufw allow from 192.168.1.0/24 to any port 22300 proto tcp # joplin
-sudo ufw allow from 192.168.1.0/24 to any port 53 proto tcp # adguard
-sudo ufw allow from 192.168.1.0/24 to any port 53 proto udp # adguard
-sudo ufw allow from 192.168.1.0/24 to any port 3000 proto tcp # adguard
-sudo ufw allow from 192.168.1.0/24 to any port 8088 proto tcp # bookmarks
-sudo ufw allow in on docker0 # docker 
-sudo ufw allow from 192.168.1.0/24 to any port 3002 proto tcp # grafana
-sudo ufw allow from 192.168.1.0/24 to any port 9090 proto tcp # prometheus
-sudo ufw allow from 192.168.1.0/24 to any port 2834 proto tcp # cadvisor
-sudo ufw allow from 192.168.1.0/24 to any port 9618 proto tcp # adguard exporter
-sudo ufw allow from 192.168.1.0/24 to any port 8384 proto tcp # syncthing
-sudo ufw allow from 192.168.1.0/24 to any port 80 proto tcp # traefik
-sudo ufw allow 22000/tcp
-sudo ufw allow 22000/udp
-sudo ufw allow 21027/udp
+sudo ufw allow in on tailscale0
+sudo ufw allow in on tailscale0 to any port <SSH-PORT> proto tcp
 ```
 Logging
 ```
