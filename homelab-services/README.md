@@ -313,3 +313,43 @@ docker compose up -d
 
 Set dashdot up on `http://server-ip:3001` on the client and you may also add it in your dashboard.
 
+# 8. Vaultwarden
+- First to to `https://login.tailscale.com/admin/dns` and enable HTTPS
+- Next find the DNS `tailscale status --json | grep DNS`. It would be something like `*.tail*.ts.net` 
+- Next, create cert `sudo tailscale cert <your tailscale dns>`
+
+```
+cd ~/homelab/apps
+mkdir vaultwarden
+cd vaultwarden
+sudo mkdir -p /data/configs/vaultwarden/certs
+sudo tailscale cert --cert-file /data/configs/vaultwarden/certs/cert.pem --key-file /data/configs/vaultwarden/certs/key.pem <your tailscale dns>
+vim docker-compose.yml
+```
+Insert this
+```
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+
+    ports:
+      - "2852:80"
+
+    environment:
+      DOMAIN: <your tailscale dns>
+      SIGNUPS_ALLOWED: "true"
+      ADMIN_TOKEN: "your token"
+
+    volumes:
+      - /data/configs/vaultwarden:/data
+```
+Start
+```
+docker-compose up -d
+```
+- `sudo tailscale serve --bg 2852`
+- Now your vaultwarden is hosted on your tailscale DNS.
+
+
