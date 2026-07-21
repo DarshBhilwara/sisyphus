@@ -143,12 +143,12 @@ services:
       - default
       - proxy
     environment:
-      - GF_SMTP_ENABLED=true
-      - GF_SMTP_HOST=smtp.gmail.com:587 
-      - GF_SMTP_USER=your-email 
-      - GF_SMTP_PASSWORD=your-app-password 
-      - GF_SMTP_FROM_ADDRESS=your-email
-      - GF_SMTP_FROM_NAME=GrafanaServer
+      GF_SMTP_ENABLED: "true"
+      GF_SMTP_HOST: "smtp.gmail.com:587"
+      GF_SMTP_USER: "your-email"
+      GF_SMTP_PASSWORD: "your-app-password" 
+      GF_SMTP_FROM_ADDRESS: "your-email"
+      GF_SMTP_FROM_NAME: "GrafanaServer"
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
@@ -202,10 +202,10 @@ services:
     image: ghcr.io/henrywhitaker3/adguard-exporter:latest
     container_name: adguard-exporter
     environment:
-      - ADGUARD_SERVERS=http://adguardhome:3000
-      - ADGUARD_USERNAMES=youruser
-      - ADGUARD_PASSWORDS=yourpw
-      - INTERVAL=30s
+      ADGUARD_SERVERS: "http://adguardhome:3000"
+      ADGUARD_USERNAMES: "youruser"
+      ADGUARD_PASSWORDS: "yourpw"
+      INTERVAL: "30s"
     ports:
       - "9618:9618"
     restart: unless-stopped
@@ -394,3 +394,5 @@ compactor:
 #### Grafana
 - First, we add data sources to Grafana(at port 3002), `Connections->Data Sources->Add Data Source->http://loki:3100`
 - Next similarly, add prometheus `http://prometheus:9090` 
+- Now we will import some basic dashboards, `Dashboards->New->Import->`. Select `1860`, `13330`, `14282`.
+- If there is an error with data source in any dashboard, then go to the dashboard settings and add a new variable of type `Data Source`, name `DS_PROMETHEUS`, type `Prometheus` and save.
