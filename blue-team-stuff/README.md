@@ -142,6 +142,13 @@ services:
     networks:
       - default
       - proxy
+    environment:
+      - GF_SMTP_ENABLED=true
+      - GF_SMTP_HOST=smtp.gmail.com:587 
+      - GF_SMTP_USER=your-email 
+      - GF_SMTP_PASSWORD=your-app-password 
+      - GF_SMTP_FROM_ADDRESS=your-email
+      - GF_SMTP_FROM_NAME=GrafanaServer
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
