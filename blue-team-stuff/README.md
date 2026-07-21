@@ -195,7 +195,7 @@ services:
     image: ghcr.io/henrywhitaker3/adguard-exporter:latest
     container_name: adguard-exporter
     environment:
-      - ADGUARD_SERVERS=http://localhost:3000
+      - ADGUARD_SERVERS=http://adguardhome:3000
       - ADGUARD_USERNAMES=youruser
       - ADGUARD_PASSWORDS=yourpw
       - INTERVAL=30s

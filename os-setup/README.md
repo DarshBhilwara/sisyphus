@@ -112,7 +112,8 @@ Install essential tools:
 
 ```
 sudo apt update
-sudo apt install neovim git ripgrep fd-find build-essential python3 nodejs npm screenfetch btop htop
+sudo apt install git ripgrep fd-find build-essential python3 nodejs npm screenfetch btop htop
+sudo snap install nvim --classic
 ```
 
 ---
