@@ -394,5 +394,5 @@ compactor:
 #### Grafana
 - First, we add data sources to Grafana(at port 3002), `Connections->Data Sources->Add Data Source->http://loki:3100`
 - Next similarly, add prometheus `http://prometheus:9090` 
-- Now we will import some basic dashboards, `Dashboards->New->Import->`. Select `1860`, `13330`, `14282`.
+- Now we will import some basic dashboards, `Dashboards->New->Import->`. Select `1860`, `20799`, `14282`.
 - If there is an error with data source in any dashboard, then go to the dashboard settings and add a new variable of type `Data Source`, name `DS_PROMETHEUS`, type `Prometheus` and save.

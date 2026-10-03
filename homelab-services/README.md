@@ -352,4 +352,309 @@ docker-compose up -d
 - `sudo tailscale serve --bg 2852`
 - Now your vaultwarden is hosted on your tailscale DNS.
 
+# 9. Music Streaming
+We will use `navidrome` for music streaming and `beets` for managing music metadata, album artwork and lyrics.
+
+All music will be stored directly in:
+
+```text
+/data/nas/music
+```
+
+Both Navidrome and Beets will access the same music folder.
+- `Navidrome` will have read-only access and will only serve the music.
+- `Beets` will have read-write access and can update metadata, artwork and lyrics directly in the existing music files.
+
+## Create the folders
+
+```
+mkdir -p /data/nas/music
+mkdir -p /data/configs/navidrome
+mkdir -p /data/configs/beets
+
+sudo chown -R $USER:$USER /data/nas/music
+sudo chown -R $USER:$USER /data/configs/navidrome
+sudo chown -R $USER:$USER /data/configs/beets
+sudo chmod -R a+rX /data/nas/music
+```
+
+## Create Navidrome
+
+```
+cd ~/homelab/apps
+mkdir navidrome
+cd navidrome
+vim docker-compose.yml
+```
+
+Insert:
+
+```
+services:
+  navidrome:
+    image: deluan/navidrome:latest
+    container_name: navidrome
+    user: "1000:1000"
+    ports:
+      - "4533:4533"
+    environment:
+      ND_LOGLEVEL: info
+      ND_SCANSCHEDULE: "1h"
+      ND_SESSIONTIMEOUT: "24h"
+      ND_LYRICSPRIORITY: ".lrc,.txt,embedded"
+      ND_SCANNER_PURGEMISSING: full
+    volumes:
+      - /data/configs/navidrome:/data
+      - /data/nas/music:/music:ro
+    restart: unless-stopped
+    networks:
+      - default
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.navidrome.rule=Host(`navidrome.home`)
+      - traefik.http.services.navidrome.loadbalancer.server.port=4533
+
+  beets:
+    image: lscr.io/linuxserver/beets:latest
+    container_name: beets
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Kolkata
+    volumes:
+      - /data/configs/beets:/config
+      - /data/nas/music:/music
+    ports:
+      - "8337:8337"
+    restart: unless-stopped
+
+networks:
+  proxy:
+    external: true
+```
+
+Start everything:
+
+```
+docker compose up -d
+```
+
+Check and set up
+```
+http://navidrome.home
+```
+
+## Configure Beets
+Beets stores its configuration in:
+```
+/data/configs/beets
+```
+
+Edit:
+```
+vim /data/configs/beets/config.yaml
+```
+
+Insert:
+
+```
+plugins:
+  - musicbrainz
+  - fetchart
+  - embedart
+  - convert
+  - scrub
+  - replaygain
+  - lastgenre
+  - chroma
+  - web
+  - lyrics 
+
+directory: /music
+library: /config/musiclibrary.db
+art_filename: albumart
+threaded: yes
+original_date: yes
+per_disc_numbering: no
+
+convert:
+    auto: no
+    ffmpeg: /usr/bin/ffmpeg
+    opts: -ab 320k -ac 2 -ar 48000
+    max_bitrate: 320
+    threads: 1
+
+paths:
+    default: $albumartist/$album%aunique{}/$track - $title
+    singleton: Non-Album/$artist - $title
+    comp: Compilations/$album%aunique{}/$track - $title
+    albumtype_soundtrack: Soundtracks/$album%aunique{}/$track - $title
+
+import:
+    write: yes
+    copy: no
+    move: yes
+    resume: ask
+    incremental: yes
+    quiet_fallback: skip
+    timid: no
+    log: /config/beet.log
+
+lastgenre:
+    auto: yes
+    source: album
+
+fetchart:
+    auto: yes
+
+embedart:
+    auto: yes
+
+replaygain:
+    auto: no
+    command: mp3gain
+
+scrub:
+    auto: yes
+
+replace:
+    '^\.': _
+    '[\x00-\x1f]': _
+    '[<>:"\?\*\|]': _
+    '[\xE8-\xEB]': e
+    '[\xEC-\xEF]': i
+    '[\xE2-\xE6]': a
+    '[\xF2-\xF6]': o
+    '[\xF8]': o
+    '\.$': _
+    '\s+$': ''
+
+web:
+    host: 0.0.0.0
+    port: 8337
+
+lyrics:
+    auto: yes
+    sources:
+      - lrclib
+      - lrcmux
+      - genius
+    synced: yes
+```
+
+Restart Beets after editing the configuration:
+
+```
+docker compose restart beets
+```
+
+You can verify the loaded configuration with:
+
+```
+docker exec -it beets beet config
+```
+
+
+## Adding Music
+Simply copy music directly into:
+
+```
+/data/nas/music
+```
+
+- The folder structure does not have to be perfect before Beets scans it.
+- Navidrome mainly relies on embedded tags to identify the music.
+
+## Import Music Into Beets
+After copying music into:
+```
+/data/nas/music
+```
+
+run
+```
+docker exec -it beets beet import /music
+```
+
+- Beets will scan the existing files and attempt to identify each album.
+- Select the correct release.
+- Beets will then write corrected metadata directly into the files without moving them.
+
+Because the configuration contains:
+
+```
+copy: no
+move: no
+write: yes
+```
+
+the music stays exactly inside:
+
+```
+/data/nas/music
+```
+but the tags inside the files are updated.
+
+
+## Update Lyrics For Existing Music
+After the library has already been imported into Beets, you do not need to import everything again just to update lyrics.
+Run:
+
+```
+docker exec -it beets beet lyrics -f
+```
+
+## Update Album Artwork
+To fetch album art for existing albums
+```
+docker exec -it beets beet fetchart
+```
+
+To embed the downloaded artwork into the music files:
+```
+docker exec -it beets beet embedart
+```
+
+## Check The Beets Library
+List all albums:
+
+```
+docker exec -it beets beet ls -a
+```
+
+List all tracks:
+
+```
+docker exec -it beets beet ls
+```
+
+Search for an artist:
+
+```
+docker exec -it beets beet ls artist:"Pink Floyd"
+```
+
+Search for an album:
+
+```
+docker exec -it beets beet ls album:"The Dark Side of the Moon"
+```
+
+## Correct Incorrect Metadata
+If Beets matched an album incorrectly, run:
+
+```
+docker exec -it beets beet modify
+```
+
+## Rescan Navidrome
+Navidrome automatically scans the library every hour.
+To manually trigger a full scan:
+
+```
+cd ~/homelab/apps/navidrome
+docker compose run --rm navidrome scan --full
+```
 
