@@ -193,33 +193,41 @@ Visit `http://server-ip:22300` from client and set up joplin
 Reset the password and it will say check email. Go to `http://server-ip:22300/admin/emails` and get the confirmation link.
 
 # 5. Bookmarks
-- I did not find any notable service for usage, so I just set up a basic HTML server.
-- Create a basic HTML file in `/data/configs/bookmarks`
+- I did not find any notable service for usage, so I made my custom tool.
 ```
 cd ~/homelab/apps
-mkdir bookmarks
-cd bookmarks
+mkdir bookmarksman
+cd bookmarksman
 vim docker-compose.yml
 ```
 Insert this
 ```
 services:
-  bookmarks:
-    image: nginx:alpine
-    container_name: bookmarks
-    restart: unless-stopped
+  bookmarksman:
+    image: darshbhilwara/bookmarksman:1.0.0
+    container_name: bookmarksman
     ports:
-      - "8088:80"
+      - "1024:8080"
+    environment:
+      BOOKMARKSMAN_DATA: /data/profiles
     volumes:
-      - /data/configs/bookmarks:/usr/share/nginx/html:ro
+      - /data/configs/bookmarksman:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8080/api/health', timeout=2)"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
     networks:
-      - default
       - proxy
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
-      - traefik.http.routers.bookmarks.rule=Host(`bookmarks.home`)
-      - traefik.http.services.bookmarks.loadbalancer.server.port=80
+      - traefik.http.routers.bookmarksman.rule=Host(`bookmarksman.home`)
+      - traefik.http.services.bookmarksman.loadbalancer.server.port=8080
+      - traefik.http.services.bookmarksman.loadbalancer.healthcheck.path=/api/health
+
 networks:
   proxy:
     external: true
@@ -228,6 +236,7 @@ Start
 ```
 docker compose up -d 
 ```
+For setting up and more info, visit the [bookmarksman](https://github.com/DarshBhilwara/bookmarksman) page. 
 
 # 6. Streaming 
 We will use `jellyfin` for this
@@ -657,4 +666,6 @@ To manually trigger a full scan:
 cd ~/homelab/apps/navidrome
 docker compose run --rm navidrome scan --full
 ```
+
+--- 
 
