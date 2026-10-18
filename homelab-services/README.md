@@ -41,7 +41,7 @@ networks:
 ```
 Run
 ```
-docker-compose up -d 
+docker compose up -d 
 ```
 Visit `http://server-ip:7575` from client and set up your dashboard
 
@@ -115,7 +115,7 @@ services:
 ```
 Run
 ```
-docker-compose up -d 
+docker compose up -d 
 ```
 Visit `http://server-ip:8384` from client and set up your linkding
 
@@ -183,7 +183,7 @@ networks:
 ```
 Run by 
 ```
-docker-compose up -d
+docker compose up -d
 ```
 
 Visit `http://server-ip:22300` from client and set up joplin
@@ -226,7 +226,7 @@ networks:
 ```
 Start
 ```
-docker-compose up -d 
+docker compose up -d 
 ```
 
 # 6. Streaming 
@@ -271,7 +271,7 @@ networks:
 ```
 Then start
 ```
-docker-compose up -d
+docker compose up -d
 ```
 Visit `http://server-ip:8096` on the client and set up your account
 
@@ -347,7 +347,7 @@ services:
 ```
 Start
 ```
-docker-compose up -d
+docker compose up -d
 ```
 - `sudo tailscale serve --bg 2852`
 - Now your vaultwarden is hosted on your tailscale DNS.
