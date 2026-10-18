@@ -199,6 +199,9 @@ cd ~/homelab/apps
 mkdir bookmarksman
 cd bookmarksman
 vim docker-compose.yml
+sudo mkdir -p /data/configs/bookmarksman
+sudo chown -R 999:999 /data/configs/bookmarksman
+sudo chmod 750 /data/configs/bookmarksman
 ```
 Insert this
 ```

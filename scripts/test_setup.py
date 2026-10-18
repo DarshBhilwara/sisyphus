@@ -24,7 +24,7 @@ class SetupTests(unittest.TestCase):
             setup.BASE = Path(tmp) / "lab"
             relatives = ("configs/prometheus", "configs/loki", "configs/grafana/provisioning/datasources",
                          "configs/jellyfin/cache", "configs/joplin/postgres")
-            for relative in relatives:
+            for relative in (*relatives, "configs/bookmarksman"):
                 (setup.BASE / "generated/data-dirs" / relative).mkdir(parents=True, exist_ok=True)
             owners = {}
             def simulate_root_install(args):
@@ -41,6 +41,8 @@ class SetupTests(unittest.TestCase):
                 self.assertEqual((setup.DATA / relative).stat().st_mode & 0o777, 0o755)
             self.assertEqual(owners[setup.DATA / "configs/jellyfin/cache"], str(setup.UID))
             self.assertEqual((setup.DATA / "configs/joplin/postgres").stat().st_mode & 0o777, 0o700)
+            self.assertEqual((setup.DATA / "configs/bookmarksman").stat().st_mode & 0o777, 0o750)
+            self.assertEqual(owners[setup.DATA / "configs/bookmarksman"], "999")
 
     def test_storage_guard_refuses_mounted_children_and_swap(self):
         script = (ROOT / "scripts/setup-storage.sh").read_text()
@@ -76,6 +78,17 @@ class SetupTests(unittest.TestCase):
             self.assertEqual(actual.replace("$$", "$"), secret)
             self.assertTrue({"homarr", "beets", "adguard", "grafana", "alloy", "prometheus", "loki"}
                             <= model["services"].keys())
+            self.assertNotIn("bookmarks", model["services"])
+            bookmarks = model["services"]["bookmarksman"]
+            self.assertEqual(bookmarks["image"], "darshbhilwara/bookmarksman:1.0.0")
+            self.assertEqual(bookmarks["environment"]["BOOKMARKSMAN_DATA"], "/data/profiles")
+            self.assertEqual(bookmarks["ports"][0]["target"], 8080)
+            self.assertEqual(str(bookmarks["ports"][0]["published"]), "1024")
+            self.assertEqual(bookmarks["volumes"][0]["source"], str(base / "untouched-data/configs/bookmarksman"))
+            self.assertEqual(bookmarks["volumes"][0]["target"], "/data")
+            self.assertIn("/api/health", bookmarks["healthcheck"]["test"][-1])
+            self.assertEqual(bookmarks["labels"]["traefik.http.routers.bookmarksman.rule"], "Host(`bookmarksman.home`)")
+            self.assertEqual(bookmarks["labels"]["traefik.http.services.bookmarksman.loadbalancer.healthcheck.path"], "/api/health")
             env["JOPLIN_DB_PASSWORD"] = "updated-password"
             subprocess.run(["python3", str(ROOT / "scripts/setup.py"), "render"], env=env,
                            check=True, capture_output=True)

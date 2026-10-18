@@ -19,7 +19,7 @@ GID = pwd.getpwnam(USER).pw_gid if USER and any(p.pw_name == USER for p in pwd.g
 LAN = os.environ.get("LAN_IP", "127.0.0.1")
 IFACE = os.environ.get("NETWORK_INTERFACE", "")
 KEY = os.environ.get("HOMARR_SECRET_ENCRYPTION_KEY", "")
-HOSTS = ["homarr", "syncthing", "joplin", "bookmarks", "jellyfin", "dashdot", "vaultwarden", "navidrome", "traefik", "adguard", "grafana", "loki", "prometheus"]
+HOSTS = ["homarr", "syncthing", "joplin", "bookmarksman", "jellyfin", "dashdot", "vaultwarden", "navidrome", "traefik", "adguard", "grafana", "loki", "prometheus"]
 
 def run(args, **kwargs):
     subprocess.run(args, check=True, **kwargs)
@@ -41,7 +41,7 @@ def initialize_host_dirs():
         "configs/syncthing", "configs/navidrome", "configs/beets", "configs/jellyfin",
         "configs/jellyfin/cache", "nas", "nas/music", "nas/phone-backup", "nas/media",
         "nas/media/movies", "nas/media/tv", "nas/media/personal")}
-    owners.update({"configs/joplin/postgres": "999:999", "configs/grafana": "472:472",
+    owners.update({"configs/bookmarksman": "999:999", "configs/joplin/postgres": "999:999", "configs/grafana": "472:472",
                    "logs/prometheus": "65534:65534", "logs/loki": "10001:10001"})
     # Explicit modes avoid inheriting the private render umask on shared configs.
     paths = [DATA] + [DATA / p.relative_to(BASE / "generated/data-dirs")
@@ -51,7 +51,7 @@ def initialize_host_dirs():
             continue
         relative = str(path.relative_to(DATA))
         owner = owners.get(relative, "0:0")
-        mode = "0700" if relative == "configs/joplin/postgres" else "0755"
+        mode = {"configs/joplin/postgres": "0700", "configs/bookmarksman": "0750"}.get(relative, "0755")
         run(["sudo", "install", "-d", "-m", mode, "-o", owner.split(":")[0],
              "-g", owner.split(":")[1], str(path)])
 
@@ -134,11 +134,19 @@ services:
     ports: [{q(LAN + ':22300:22300')}]
     environment: {{ APP_PORT: "22300", APP_BASE_URL: {q(os.environ.get('JOPLIN_BASE_URL', 'http://joplin.home'))}, DB_CLIENT: pg, POSTGRES_HOST: joplin-db, POSTGRES_PORT: "5432", POSTGRES_USER: joplin, POSTGRES_PASSWORD: {q(os.environ.get('JOPLIN_DB_PASSWORD', 'CHANGE_ME'))}, POSTGRES_DATABASE: joplindb }}
     restart: unless-stopped
-  bookmarks:
-    image: nginx:alpine
-    ports: [{q(LAN + ':8088:80')}]
-    volumes: [{q(str(DATA / 'configs/bookmarks') + ':/usr/share/nginx/html:ro')}]
+  bookmarksman:
+    image: darshbhilwara/bookmarksman:1.0.0
+    container_name: bookmarksman
+    ports: [{q(LAN + ':1024:8080')}]
+    environment: {{ BOOKMARKSMAN_DATA: /data/profiles }}
+    volumes: [{q(str(DATA / 'configs/bookmarksman') + ':/data')}]
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8080/api/health', timeout=2)"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
   jellyfin:
     image: jellyfin/jellyfin:latest
     profiles: [media]
@@ -232,19 +240,21 @@ networks:
     name: proxy
 '''
     generated(target / "docker-compose.yml", yaml)
-    route_ports = {"homarr": 7575, "syncthing": 8384, "joplin": 22300, "bookmarks": 80,
+    route_ports = {"homarr": 7575, "syncthing": 8384, "joplin": 22300, "bookmarksman": 8080,
                    "jellyfin": 8096, "dashdot": 3001, "navidrome": 4533,
                    "adguard": 80, "grafana": 3000, "loki": 3100, "prometheus": 9090}
     for service, port in route_ports.items():
         marker = f"  {service}:\n"
         start = yaml.index(marker) + len(marker)
-        candidates = [yaml.find(f"\n  {other}:\n", start) for other in ("traefik", "homarr", "syncthing", "joplin-db", "joplin", "bookmarks", "jellyfin", "dashdot", "vaultwarden", "navidrome", "beets", "adguard", "loki", "prometheus", "grafana", "alloy", "node-exporter", "adguard-exporter", "networks") if yaml.find(f"\n  {other}:\n", start) >= 0]
+        candidates = [yaml.find(f"\n  {other}:\n", start) for other in ("traefik", "homarr", "syncthing", "joplin-db", "joplin", "bookmarksman", "jellyfin", "dashdot", "vaultwarden", "navidrome", "beets", "adguard", "loki", "prometheus", "grafana", "alloy", "node-exporter", "adguard-exporter", "networks") if yaml.find(f"\n  {other}:\n", start) >= 0]
         end = min(candidates) if candidates else len(yaml)
         labels = (f"    networks: [default, proxy]\n    labels:\n"
                   f"      traefik.enable: \"true\"\n"
                   f"      traefik.docker.network: \"proxy\"\n"
                   f"      traefik.http.routers.{service}.rule: \"Host(`{service}.home`)\"\n"
                   f"      traefik.http.services.{service}.loadbalancer.server.port: \"{port}\"\n")
+        if service == "bookmarksman":
+            labels += '      traefik.http.services.bookmarksman.loadbalancer.healthcheck.path: "/api/health"\n'
         yaml = yaml[:end] + "\n" + labels + yaml[end:]
     generated(target / "docker-compose.yml", yaml)
     generated(target / "prometheus.yml", f'''global:\n  scrape_interval: 15s\nscrape_configs:\n  - job_name: prometheus\n    static_configs: [{{targets: ["prometheus:9090"]}}]\n  - job_name: node\n    static_configs: [{{targets: ["node-exporter:9100"]}}]\n  - job_name: adguard\n    static_configs: [{{targets: ["adguard-exporter:9618"]}}]\n''')
@@ -257,7 +267,7 @@ networks:
     generated(target / "configs/grafana/provisioning/datasources/datasources.yml", '''apiVersion: 1\ndatasources:\n  - name: Prometheus\n    type: prometheus\n    access: proxy\n    url: http://prometheus:9090\n    isDefault: true\n  - name: Loki\n    type: loki\n    access: proxy\n    url: http://loki:3100\n''')
     generated(target / "configs/beets/config.yaml", '''plugins: [musicbrainz, fetchart, embedart, convert, scrub, replaygain, lastgenre, chroma, web, lyrics]\ndirectory: /music\nlibrary: /config/musiclibrary.db\nart_filename: albumart\nthreaded: yes\noriginal_date: yes\nper_disc_numbering: no\npaths:\n  default: $albumartist/$album%aunique{}/$track - $title\n  singleton: Non-Album/$artist - $title\n  comp: Compilations/$album%aunique{}/$track - $title\nimport:\n  write: yes\n  copy: no\n  move: no\n  resume: ask\n  incremental: yes\n  quiet_fallback: skip\n  timid: no\n  log: /config/beet.log\nfetchart: {auto: yes}\nembedart: {auto: yes}\nlastgenre: {auto: yes, source: album}\nlyrics:\n  auto: yes\n  sources: [lrclib, lrcmux, genius]\n  synced: yes\nweb: {host: 0.0.0.0, port: 8337}\n''')
     
-    for p in ["nas", "nas/phone-backup", "nas/media", "nas/media/movies", "nas/media/tv", "nas/media/personal", "nas/music", "configs/homarr", "configs/syncthing", "configs/joplin/postgres", "configs/bookmarks", "configs/jellyfin", "configs/jellyfin/cache", "configs/vaultwarden", "configs/navidrome", "configs/beets", "configs/grafana", "configs/grafana/provisioning/datasources", "configs/prometheus", "configs/loki", "configs/adguard", "configs/alloy", "configs/suricata/rules", "logs/suricata", "logs/loki", "logs/adguard", "logs/prometheus", "backups"]:
+    for p in ["nas", "nas/phone-backup", "nas/media", "nas/media/movies", "nas/media/tv", "nas/media/personal", "nas/music", "configs/homarr", "configs/syncthing", "configs/joplin/postgres", "configs/bookmarksman", "configs/jellyfin", "configs/jellyfin/cache", "configs/vaultwarden", "configs/navidrome", "configs/beets", "configs/grafana", "configs/grafana/provisioning/datasources", "configs/prometheus", "configs/loki", "configs/adguard", "configs/alloy", "configs/suricata/rules", "logs/suricata", "logs/loki", "logs/adguard", "logs/prometheus", "backups"]:
         (target / "data-dirs" / p).mkdir(parents=True, exist_ok=True)
     generated(target / "suricata-compose.yml", f'''services:\n  suricata:\n    image: jasonish/suricata:latest\n    network_mode: host\n    cap_add: [NET_ADMIN, NET_RAW, SYS_NICE]\n    volumes: [{q(str(DATA / 'configs/suricata') + ':/etc/suricata')}, {q(str(DATA / 'logs/suricata') + ':/var/log/suricata')}, {q(str(DATA / 'configs/suricata/rules') + ':/var/lib/suricata/rules')}]\n    command: ["-i", {q(IFACE or 'SET_NETWORK_INTERFACE')}]\n    restart: unless-stopped\n''')
     print(f"Rendered compose and initial configs under {target}; no host packages or /data files were changed.")
