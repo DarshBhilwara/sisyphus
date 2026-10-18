@@ -1,0 +1,7 @@
+setup.env
+*.env.local
+__pycache__/
+**/generated/
+.env
+.env.*
+!.env.example

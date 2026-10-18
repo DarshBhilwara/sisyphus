@@ -17,6 +17,8 @@ The project focuses on:
 - 1TB HDD (data)
 
 ## Setup
+For an automated, environment-driven bootstrap on a fresh Ubuntu host, see [SETUP.md](./SETUP.md). It supports render-only review before host changes.
+
 ### 1. Ubuntu Server
 - Refer [os-setup](./os-setup/README.md) for setting up the operating system.
 
